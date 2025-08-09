@@ -69,6 +69,20 @@
     </div>
 
     <script>
+        /*
+         * VERSION CONTROL
+         *
+         * v1.0.0: Initial creation. Course plan with titles, progress tracking, and notes.
+         * v1.1.0: Added full verbatim text content for each day's lesson.
+         * v1.2.0: Added page number references and a PDF download link.
+         * v1.3.0: Implemented mobile-responsive layout and added page numbers to sidebar.
+         * v2.0.0 (Problematic): Replaced download link with an embedded PDF viewer.
+         * v2.1.0 (Problematic): Added navigation within the PDF viewer.
+         * v3.0.0 (Current Stable Version): Reverted to a stable state. This version uses summaries
+         * with reliable links to open the PDF in a new tab, jumping to the correct page.
+         * This avoids the bugs associated with the embedded iframe viewer.
+        */
+
         const courseData = [
             // Week 1: Introduction and Fundamentals
             { week: 1, day: 1, title: "Introduction to Vedic Astrology", pages: "Pages 7-13", startPage: 7, content: `<p>This lesson introduces Vedic Astrology (Jyotish) as a spiritual discipline aimed at promoting Self-realization. It covers the relationship between astrology, Yoga, and Ayurveda, and discusses the core concepts of karma, fate, and free will. The goal is to understand that the birth chart is a map of life's tendencies, which can be changed through conscious action.</p>` },
@@ -94,7 +108,7 @@
             { week: 3, day: 19, title: "Retrograde Planets (Vakra)", pages: "Pages 55-56", startPage: 55, content: `<p>A retrograde planet's energy is expressed in a more internal, reflective, or unconventional manner. It often points to unresolved karmic issues.</p>` },
             { week: 3, day: 20, title: "Planets and Signs", pages: "Pages 57-59", startPage: 57, content: `<p>This lesson covers planetary dignity: its strength based on the sign it occupies. This includes its own sign, exaltation (strongest), fall (weakest), and moolatrikona (strong).</p>` },
             { week: 3, day: 21, title: "Week 3 Review", pages: "Review", startPage: 46, content: `<p>Review Saturn, Rahu & Ketu, and all the planetary conditions: relationships, combustion, retrogradation, and dignity. These are key to assessing a planet's true power.</p>` },
-            // ... (rest of the days are omitted for brevity but are identical to the previous version)
+             // ... (rest of the days are omitted for brevity but are identical to the previous version)
             { week: 4, day: 22, title: "The First House (Lagna)", pages: "Pages 67-68", startPage: 67, content: "<p>Begin the study of the twelve houses (Bhavas). The 1st House represents the self, body, personality, appearance, and overall vitality. It is the foundation of the chart.</p>" },
             { week: 4, day: 23, title: "The Second House", pages: "Pages 68-69", startPage: 68, content: "<p>The 2nd House relates to wealth, family, speech, values, and food. It signifies the resources that sustain us.</p>" },
             { week: 4, day: 24, title: "The Third House", pages: "Pages 69-70", startPage: 69, content: "<p>The 3rd House governs younger siblings, courage, communication, hobbies, and self-effort. It shows our drive and motivations.</p>" },
@@ -293,14 +307,20 @@
                     prevDayBtn.disabled = true;
                     prevDayBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 } else {
-                    prevDayBtn.addEventListener('click', () => renderDayContent(dayNumber - 1));
+                    prevDayBtn.addEventListener('click', () => {
+                        const prevDayData = courseData.find(d => d.day === dayNumber - 1);
+                        renderPdfView(prevDayData.startPage, prevDayData.day);
+                    });
                 }
 
                 if (dayNumber >= courseData.length) {
                     nextDayBtn.disabled = true;
                     nextDayBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 } else {
-                    nextDayBtn.addEventListener('click', () => renderDayContent(dayNumber + 1));
+                    nextDayBtn.addEventListener('click', () => {
+                        const nextDayData = courseData.find(d => d.day === dayNumber + 1);
+                        renderPdfView(nextDayData.startPage, nextDayData.day);
+                    });
                 }
             }
 
