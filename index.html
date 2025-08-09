@@ -1,322 +1,188 @@
+<!--
+Version: 15.0.3 (Duplicate Message Fix)
+Date: August 5, 2025
+Notes:
+- This is the final, stable version of the frontend.
+- Includes full authentication, password recovery, and conversation persistence.
+- Fixes a bug where the initial welcome message was displayed multiple times on login.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vedic Astrology 90-Day Course</title>
+    <title>Smartlinks Coaching Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .sidebar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        .sidebar::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, and Opera */
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 24px; height: 24px; border-radius: 50%; border-left-color: #003F5C; animation: spin 1s ease infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="text-gray-800">
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#003F5C] mb-4">Smartlinks Coaching Platform</h1>
+            <p class="text-lg text-[#374C80]">Your AI-Powered Coaching Companion</p>
+            <p class="text-md text-[#374C80] mt-4">Created by: Heera Ganjikota - ICF PCC</p>
+        </header>
 
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col sidebar">
-            <div class="p-6 border-b border-gray-200">
-                <h1 class="text-2xl font-bold text-indigo-600">Vedic Astrology Course</h1>
-                <p class="text-sm text-gray-500 mt-1">A 90-day journey based on "The Art and Science of Vedic Astrology"</p>
-            </div>
-            <div class="p-4 border-b">
-                <button id="view-pdf-btn" class="flex items-center justify-center w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                    </svg>
-                    View Full PDF
-                </button>
-            </div>
-            <div class="flex-grow overflow-y-auto" id="course-plan">
-                <!-- Course plan will be dynamically generated here -->
-            </div>
-        </div>
+        <main>
+            <!-- Login View -->
+            <section id="login-view" class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg hidden">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Member Login</h2>
+                <form id="login-form">
+                    <div class="mb-4"><label for="email" class="block text-gray-700 font-semibold mb-2">Email Address</label><input type="email" id="email" class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-[#FFA600] focus:outline-none" required></div>
+                    <div class="mb-6"><label for="password" class="block text-gray-700 font-semibold mb-2">Password</label><input type="password" id="password" class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-[#FFA600] focus:outline-none" required></div>
+                    <button type="submit" class="w-full bg-[#003F5C] hover:bg-[#374C80] text-white font-bold py-3 px-4 rounded-md transition-colors duration-300">Sign In</button>
+                </form>
+                <p class="text-center mt-4"><a href="#" id="forgot-password-link" class="text-sm text-blue-600 hover:underline">Forgot Password?</a></p>
+                <p id="auth-message" class="text-center mt-4"></p>
+            </section>
 
-        <!-- Main Content -->
-        <div class="w-2/3 flex flex-col">
-            <div class="flex-grow p-8 overflow-y-auto" id="main-content-wrapper">
-                <div id="main-content">
-                    <div class="text-center">
-                        <h2 class="text-3xl font-bold mb-4">Welcome to Your 90-Day Course</h2>
-                        <p class="text-lg text-gray-600">Select a day from the course plan to begin your journey into Vedic Astrology.</p>
-                         <div class="mt-8">
-                            <svg class="w-32 h-32 mx-auto text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                        </div>
+            <!-- Password Reset View -->
+            <section id="reset-password-view" class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg hidden">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Reset Password</h2>
+                <form id="reset-password-form">
+                    <div class="mb-4"><label for="reset-email" class="block text-gray-700 font-semibold mb-2">Email Address</label><input type="email" id="reset-email" class="w-full p-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-[#FFA600] focus:outline-none" required></div>
+                    <button type="submit" class="w-full bg-[#003F5C] hover:bg-[#374C80] text-white font-bold py-3 px-4 rounded-md transition-colors duration-300">Send Reset Link</button>
+                </form>
+                 <p class="text-center mt-4"><a href="#" id="back-to-login-link" class="text-sm text-blue-600 hover:underline">Back to Login</a></p>
+                 <p id="reset-message" class="text-center mt-4"></p>
+            </section>
+
+            <!-- Chatbot View -->
+            <section id="chatbot-view" class="mb-16 hidden">
+                <div class="text-right mb-4"><button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-300">Logout</button></div>
+                <div class="bg-gradient-to-br from-[#003F5C] to-[#374C80] rounded-lg shadow-xl p-6 md:p-8 text-white">
+                    <h3 class="text-3xl font-bold text-center mb-4">Your Coaching Companion</h3>
+                    <div class="max-w-2xl mx-auto bg-white/10 rounded-lg p-4">
+                        <div id="chat-window" class="h-80 overflow-y-auto pr-2 space-y-4 flex flex-col"></div>
+                        <div id="chat-input-container" class="mt-4 flex items-center space-x-2"><input type="text" id="chat-input" class="w-full flex-grow p-3 rounded-md text-gray-800 focus:ring-2 focus:ring-[#FFA600] focus:outline-none" placeholder="Type your message..."><button id="send-button" class="bg-[#FFA600] hover:bg-[#FF764A] text-white font-bold py-3 px-4 rounded-md transition-colors duration-300">Send</button></div>
+                        <div id="chat-controls" class="mt-4 flex justify-start items-center text-sm"><button id="new-conversation-button" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-300">New Conversation</button></div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const courseData = [
-            // Week 1: Introduction and Fundamentals
-            { week: 1, day: 1, title: "Introduction to Vedic Astrology", pages: "Pages 7-13", startPage: 7, content: `<p>This lesson introduces Vedic Astrology (Jyotish) as a spiritual discipline aimed at promoting Self-realization. It covers the relationship between astrology, Yoga, and Ayurveda, and discusses the core concepts of karma, fate, and free will. The goal is to understand that the birth chart is a map of life's tendencies, which can be changed through conscious action.</p>` },
-            { week: 1, day: 2, title: "Study, Practice, and the Four Goals", pages: "Pages 14-17", startPage: 14, content: `<p>Today's reading outlines the threefold role of an astrologer: as an objective witness, a guide, and a harmonizer of life's four main goals (Dharma, Artha, Kama, Moksha). It emphasizes the importance of proper study, memorization, and practical application by observing charts to develop intuition and skill.</p>` },
-            { week: 1, day: 3, title: "Meditation and Astrology", pages: "Pages 18-20", startPage: 18, content: `<p>This lesson explains why meditation is a crucial practice for an astrologer. It helps clear the mind of personal biases (samskaras), allowing for a more objective and truthful interpretation of a horoscope. A basic mantra meditation technique ("so hum") is introduced as a starting point for daily practice.</p>` },
-            { week: 1, day: 4, title: "Astrology Specific Meditations", pages: "Pages 20-23", startPage: 20, content: `<p>Explore meditation techniques specifically designed to harmonize with planetary energies. This includes Inner Light and Sound Contemplation (focusing on OM), Chanting Through the Chakras (correlating mantras to planetary centers), and Sushumna Breathing to circulate life force.</p>` },
-            { week: 1, day: 5, title: "Fundamental Terminology", pages: "Pages 25-28", startPage: 25, content: `<p>This lesson covers the essential vocabulary of Jyotish. It highlights the key differences from Western astrology, such as the use of the Sidereal (fixed) zodiac and the concept of the Ayanamsha. It also recommends foundational texts for further study.</p>` },
-            { week: 1, day: 6, title: "The Zodiac and Chart Styles", pages: "Pages 34-39", startPage: 34, content: `<p>Learn about the structure of the zodiac as a 360-degree band divided into 12 signs. This lesson also introduces the two primary styles of the Vedic birth chart diagram: the South Indian (square, fixed-sign) and North Indian (diamond, fixed-house) formats.</p>` },
-            { week: 1, day: 7, title: "Week 1 Review", pages: "Review", startPage: 7, content: `<p>Review the foundational concepts from the first week: the spiritual purpose of Jyotish, the role of the astrologer, meditation techniques, key terminology, the structure of the zodiac, and the different chart styles.</p>` },
-            // Week 2
-            { week: 2, day: 8, title: "The Sun (Surya)", pages: "Pages 41-42", startPage: 41, content: `<p>Begin the study of the planets (Grahas). The Sun represents the Inner Light, spirit, ego, father, authority, and vitality. A well-placed Sun gives confidence and strength of character.</p>` },
-            { week: 2, day: 9, title: "The Moon (Chandra)", pages: "Pages 42-43", startPage: 42, content: `<p>The Moon represents the mind (manas), emotions, the mother, and our receptive, imaginative nature. Its strength and phase (waxing/waning) are crucial in a chart.</p>` },
-            { week: 2, day: 10, title: "Mars (Kuja)", pages: "Pages 44-45", startPage: 44, content: `<p>Mars is the planet of energy, action, courage, logic, and initiative. It can indicate conflict and aggression when poorly placed, or drive and determination when well-placed.</p>` },
-            { week: 2, day: 11, title: "Mercury (Budha)", pages: "Page 43", startPage: 43, content: `<p>Mercury governs the intellect, communication, speech, writing, and trade. It is an adaptable planet that reflects the qualities of the planets it is associated with.</p>` },
-            { week: 2, day: 12, title: "Jupiter (Guru)", pages: "Page 45", startPage: 45, content: `<p>Jupiter is the great benefic, representing wisdom, expansion, good fortune, and higher knowledge. It is the planet of the teacher or guru.</p>` },
-            { week: 2, day: 13, title: "Venus (Shukra)", pages: "Pages 43-44", startPage: 43, content: `<p>Venus is the planet of love, beauty, harmony, and pleasure. It governs relationships, the arts, comforts, and luxuries.</p>` },
-            { week: 2, day: 14, title: "Week 2 Review", pages: "Review", startPage: 41, content: `<p>Review the core meanings of the first six classical planets: Sun, Moon, Mars, Mercury, Jupiter, and Venus. Try to associate their energies with people or situations you know.</p>` },
-            // Week 3
-            { week: 3, day: 15, title: "Saturn (Shani)", pages: "Pages 46-47", startPage: 46, content: `<p>Saturn is the planet of restriction, discipline, responsibility, and karma. It represents patience, endurance, and the reality of limitations.</p>` },
-            { week: 3, day: 16, title: "Rahu and Ketu", pages: "Pages 47-49", startPage: 47, content: `<p>Learn about the lunar nodes. Rahu (North Node) represents worldly desire, ambition, and obsession. Ketu (South Node) represents past-life talents, spirituality, and detachment.</p>` },
-            { week: 3, day: 17, title: "Planetary Relationships", pages: "Pages 50-52", startPage: 50, content: `<p>Understand the fivefold system of planetary relationships (Panchadha Maitri), which combines their natural (permanent) and chart-specific (temporary) friendships and enmities.</p>` },
-            { week: 3, day: 18, title: "Combustion (Asta)", pages: "Pages 52-54", startPage: 52, content: `<p>A planet is 'combust' when it is too close to the Sun, which can burn away its significations and weaken the houses it rules.</p>` },
-            { week: 3, day: 19, title: "Retrograde Planets (Vakra)", pages: "Pages 55-56", startPage: 55, content: `<p>A retrograde planet's energy is expressed in a more internal, reflective, or unconventional manner. It often points to unresolved karmic issues.</p>` },
-            { week: 3, day: 20, title: "Planets and Signs", pages: "Pages 57-59", startPage: 57, content: `<p>This lesson covers planetary dignity: its strength based on the sign it occupies. This includes its own sign, exaltation (strongest), fall (weakest), and moolatrikona (strong).</p>` },
-            { week: 3, day: 21, title: "Week 3 Review", pages: "Review", startPage: 46, content: `<p>Review Saturn, Rahu & Ketu, and all the planetary conditions: relationships, combustion, retrogradation, and dignity. These are key to assessing a planet's true power.</p>` },
-            // Week 4
-            { week: 4, day: 22, title: "The First House (Lagna)", pages: "Pages 67-68", startPage: 67, content: "<p>Begin the study of the twelve houses (Bhavas). The 1st House represents the self, body, personality, appearance, and overall vitality. It is the foundation of the chart.</p>" },
-            { week: 4, day: 23, title: "The Second House", pages: "Pages 68-69", startPage: 68, content: "<p>The 2nd House relates to wealth, family, speech, values, and food. It signifies the resources that sustain us.</p>" },
-            { week: 4, day: 24, title: "The Third House", pages: "Pages 69-70", startPage: 69, content: "<p>The 3rd House governs younger siblings, courage, communication, hobbies, and self-effort. It shows our drive and motivations.</p>" },
-            { week: 4, day: 25, title: "The Fourth House", pages: "Pages 70-71", startPage: 70, content: "<p>The 4th house is associated with mother, home, emotional happiness, property, and vehicles. It represents our inner peace and sense of security.</p>" },
-            { week: 4, day: 26, title: "The Fifth House", pages: "Pages 71-72", startPage: 71, content: "<p>The 5th House is associated with children, creativity, intelligence, romance, and speculation. It also signifies past-life credit (purva punya).</p>" },
-            { week: 4, day: 27, title: "The Sixth House", pages: "Page 72", startPage: 72, content: "<p>The 6th House is related to health, disease, daily work, service, enemies, and debts. It reflects our challenges and capacity to overcome them.</p>" },
-            { week: 4, day: 28, title: "Week 4 Review", pages: "Review", startPage: 67, content: "<p>Review the core meanings of the first six houses. Try to associate them with areas of your own life.</p>" },
-            // Week 5
-            { week: 5, day: 29, title: "The Seventh House", pages: "Page 73", startPage: 73, content: "<p>The 7th House represents marriage, partnerships, business, and 'the other'. It shows the kind of people one chooses for long-term relationships.</p>" },
-            { week: 5, day: 30, title: "The Eighth House", pages: "Pages 73-74", startPage: 73, content: "<p>The 8th House is associated with longevity, transformation, occult matters, inheritance, chronic illness, and the hidden side of life.</p>" },
-            { week: 5, day: 31, title: "The Ninth House", pages: "Pages 74-75", startPage: 74, content: "<p>The 9th House is the house of fortune, father, guru, higher education, long journeys, religion, and philosophy.</p>" },
-            { week: 5, day: 32, title: "The Tenth House", pages: "Page 76", startPage: 76, content: "<p>The 10th House is the house of career, status, public life, and our action (karma) in the world. It shows our professional achievements.</p>" },
-            { week: 5, day: 33, title: "The Eleventh House", pages: "Pages 76-77", startPage: 76, content: "<p>The 11th House represents gains, profits, friendships, elder siblings, and our aspirations and goals.</p>" },
-            { week: 5, day: 34, title: "The Twelfth House", pages: "Pages 77-78", startPage: 77, content: "<p>The 12th House represents loss, expenses, foreign lands, the subconscious mind, and spiritual liberation (Moksha).</p>" },
-            { week: 5, day: 35, title: "Week 5 Review", pages: "Review", startPage: 73, content: "<p>Consolidate your knowledge of all twelve houses. A solid understanding of the houses is fundamental to chart interpretation.</p>" },
-            // Week 6
-            { week: 6, day: 36, title: "House Groupings", pages: "Pages 78-82", startPage: 78, content: "<p>Learn about important house classifications: Kendras (angles: 1, 4, 7, 10) are pillars of strength. Trikonas (trines: 1, 5, 9) are houses of fortune. Dusthanas (6, 8, 12) are houses of suffering. Upachayas (3, 6, 10, 11) are houses of growth.</p>" },
-            { week: 6, day: 37, title: "Bhavat Bhavam", pages: "Pages 82-83", startPage: 82, content: "<p>Understand the advanced principle of 'Bhavat Bhavam' (house to house) to derive deeper meanings. For example, the 2nd house (finances) is the 5th (creativity) from the 10th (career), indicating finances from creative career pursuits.</p>" },
-            { week: 6, day: 38, title: "Planetary Aspects (Drishti)", pages: "Pages 85-87", startPage: 85, content: "<p>Learn the rules of planetary aspects (Drishti). All planets aspect the 7th house from their position. Mars has special aspects to the 4th and 8th houses; Jupiter to the 5th and 9th; and Saturn to the 3rd and 10th.</p>" },
-            { week: 6, day: 39, title: "Aspect Examples", pages: "Page 86", startPage: 86, content: "<p>Practice identifying aspects in an example chart. Use the chart of Margaret Thatcher on page 86 to trace all the full-strength aspects from each planet to other houses and planets.</p>" },
-            { week: 6, day: 40, title: "Conjunction and Mutual Aspects", pages: "Pages 88-89", startPage: 88, content: "<p>Understand what happens when planets are in the same house (conjunction) and when they mutually aspect each other (sambhanda), which creates a powerful link between them.</p>" },
-            { week: 6, day: 41, title: "The Ascendant (Aries-Virgo)", pages: "Pages 92-94", startPage: 92, content: "<p>The Ascendant (Lagna) is the most important house. This lesson covers the characteristics of the first six rising signs: Aries (active), Taurus (grounded), Gemini (communicative), Cancer (sensitive), Leo (regal), and Virgo (practical).</p>" },
-            { week: 6, day: 42, title: "Week 6 Review", pages: "Review", startPage: 78, content: "<p>Review house groupings, the principle of Bhavat Bhavam, all the rules for planetary aspects, and the characteristics of the first six ascendants.</p>" },
-            // Week 7
-            { week: 7, day: 43, title: "The Ascendant (Libra-Pisces)", pages: "Pages 94-96", startPage: 94, content: "<p>This lesson covers the characteristics of the remaining six rising signs: Libra (harmonious), Scorpio (intense), Sagittarius (philosophical), Capricorn (ambitious), Aquarius (original), and Pisces (intuitive).</p>" },
-            { week: 7, day: 44, title: "Functional Nature of Planets", pages: "Pages 96-99", startPage: 96, content: "<p>Understand the crucial concept of functional benefic and malefic planets. A planet's nature changes based on the houses it rules for a specific Ascendant. A natural benefic like Jupiter can give malefic results if it rules difficult houses.</p>" },
-            { week: 7, day: 45, title: "Planetary Yogas", pages: "Pages 104-105", startPage: 104, content: "<p>A yoga is a special combination of planets that produces a specific result. This lesson introduces Raja Yogas (royal combinations), particularly the powerful Dharma Karma Adhipati Yoga, which connects a trinal lord (9th/5th) with an angular lord (1st/4th/7th/10th).</p>" },
-            { week: 7, day: 46, title: "Pancha Mahapurusha Yogas", pages: "Pages 105-108", startPage: 105, content: "<p>Study the five 'great person' yogas: Ruchaka (Mars), Bhadra (Mercury), Hamsa (Jupiter), Malavya (Venus), and Shasha (Saturn). They are formed when one of these planets is exalted or in its own sign in an angular house.</p>" },
-            { week: 7, day: 47, title: "Gaja Keshari Yoga", pages: "Pages 108-109", startPage: 108, content: "<p>Learn about this auspicious yoga formed when Jupiter is in an angle (1, 4, 7, 10) from the Moon. It is said to give good fortune, intelligence, and a noble character.</p>" },
-            { week: 7, day: 48, title: "Yogas Involving the Moon", pages: "Pages 109-110", startPage: 109, content: "<p>Study the yogas formed by planets relative to the Moon. Sunapha, Anapha, and Durudhara yogas are formed by planets in the 2nd, 12th, or both houses from the Moon. Kemadruma yoga, the absence of planets flanking the Moon, can indicate loneliness.</p>" },
-            { week: 7, day: 49, title: "Week 7 Review", pages: "Review", startPage: 94, content: "<p>Review the descriptions of all twelve ascendants, the concept of functional planets, and the various yogas learned this week. Practice identifying them in example charts.</p>" },
-            // Week 8
-            { week: 8, day: 50, title: "More Yogas", pages: "Pages 110-114", startPage: 110, content: `<p>Study several other important yogas, including Shubha/Papa Kartari (planets hemming a house), Amala Yoga (benefic in the 10th), and Parivartana Yoga (exchange of signs between planets).</p>` },
-            { week: 8, day: 51, title: "Kala Sarpa Yoga", pages: "Pages 112-113", startPage: 112, content: `<p>Learn about this significant and often challenging yoga formed when all seven planets are located on one side of the Rahu-Ketu axis. It can indicate a life with a strong, focused karmic path.</p>` },
-            { week: 8, day: 52, title: "Divisional Charts (Vargas)", pages: "Page 115", startPage: 115, content: `<p>This lesson introduces the concept of vargas, or divisional charts. These are harmonic charts derived from the main Rashi chart that provide a deeper, more specific look into particular areas of life.</p>` },
-            { week: 8, day: 53, title: "Hora (D2) and Drekkana (D3)", pages: "Pages 116-117", startPage: 116, content: `<p>Learn about the Hora (D2) chart, which is used to analyze wealth and the balance of masculine/feminine energies, and the Drekkana (D3) chart, for siblings, courage, and motivation.</p>` },
-            { week: 8, day: 54, title: "Navamsha (D9)", pages: "Pages 117-120", startPage: 117, content: `<p>Study the Navamsha (D9), the most important divisional chart. It gives profound insights into marriage, dharma (life purpose), and the underlying strength or weakness of planets in the main chart.</p>` },
-            { week: 8, day: 55, title: "Dwadamsha (D12) and Trimsamsa (D30)", pages: "Pages 121-122", startPage: 121, content: `<p>Learn about the Dwadamsha (D12) for understanding parents and past karma, and the Trimsamsa (D30) for analyzing misfortunes, dangers, and health problems.</p>` },
-            { week: 8, day: 56, title: "Week 8 Review", pages: "Review", startPage: 110, content: `<p>Review all the yogas and the purpose of each main divisional chart: D1 (Body), D2 (Wealth), D3 (Siblings), D9 (Spouse/Dharma), D12 (Parents), D30 (Health/Misfortune).</p>` },
-            // Week 9
-            { week: 9, day: 57, title: "Vimshottari Dasha System", pages: "Pages 126-127", startPage: 126, content: `<p>This lesson introduces the Vimshottari Dasha system, the primary predictive tool in Vedic Astrology. It is a 120-year cycle of planetary periods that indicates when the karma signified by each planet will manifest.</p>` },
-            { week: 9, day: 58, title: "The Nakshatras", pages: "Page 128", startPage: 128, content: `<p>The Dasha system is based on the 27 Nakshatras, or lunar mansions. The specific Nakshatra the Moon occupies at birth determines the starting point of the Dasha sequence.</p>` },
-            { week: 9, day: 59, title: "Calculating Dashas", pages: "Pages 129-130", startPage: 129, content: `<p>Understand the principle behind calculating the Dasha balance at birth. While software does this automatically, knowing the logic is helpful. It's based on the Moon's traversed distance within its birth Nakshatra.</p>` },
-            { week: 9, day: 60, title: "Judging Dasha Results", pages: "Pages 134-135", startPage: 134, content: `<p>The main principle of Dasha interpretation is that a planet will manifest the results of its placement, rulership, and associations in the birth chart during its period. A strong, well-placed planet gives good results; a weak, afflicted one gives challenges.</p>` },
-            { week: 9, day: 61, title: "Judging Bhukti Results", pages: "Pages 137-138", startPage: 137, content: `<p>Each Mahadasha is divided into nine sub-periods (Bhuktis). To interpret a Bhukti, analyze the relationship between the Mahadasha lord and the Bhukti lord, and their positions relative to each other.</p>` },
-            { week: 9, day: 62, title: "Dasha Results by House Rulership (1-4)", pages: "Pages 139-140", startPage: 139, content: `<p>Learn the specific results of a Dasha based on the house the planet rules. The lord of the 1st house can bring recognition; the 2nd, wealth; the 3rd, courage and enterprise; the 4th, domestic happiness and property.</p>` },
-            { week: 9, day: 63, title: "Week 9 Review", pages: "Review", startPage: 126, content: `<p>Review the entire Vimshottari Dasha system. It is a complex but essential part of predictive Jyotish. Ensure you understand its basis in the Nakshatras and the principles for judging planetary periods.</p>` },
-            // Week 10
-            { week: 10, day: 64, title: "Dasha Results (5-8)", pages: "Pages 140-142", startPage: 140, content: `<p>Continue studying Dasha results by house rulership. The lord of the 5th can bring children or creative success; the 6th, health issues or victory; the 7th, marriage or partnerships; the 8th, sudden changes or chronic illness.</p>` },
-            { week: 10, day: 65, title: "Dasha Results (9-12)", pages: "Pages 142-143", startPage: 142, content: `<p>Complete the study of Dasha results. The lord of the 9th can bring good fortune; the 10th, career success; the 11th, gains and fulfillment of desires; the 12th, expenses or spiritual progress.</p>` },
-            { week: 10, day: 66, title: "Introduction to Transits (Gochar)", pages: "Pages 144-146", startPage: 144, content: `<p>A transit (Gochar) refers to the current movement of planets in the sky as they relate to the fixed positions in your birth chart. Transits activate the potential promised in the natal chart.</p>` },
-            { week: 10, day: 67, title: "Transits of a Planet", pages: "Pages 147-148", startPage: 147, content: `<p>The slower-moving planets, Jupiter and Saturn, have the most significant and long-lasting influence as they transit through the houses. Jupiter generally brings expansion and opportunity, while Saturn brings responsibility, discipline, and reality checks.</p>` },
-            { week: 10, day: 68, title: "Guidelines for Interpreting Transits", pages: "Pages 148-149", startPage: 148, content: `<p>The most important guideline for using transits is to coordinate them with the Dasha and Bhukti periods. The Dasha indicates the overall theme, while the transit can trigger specific events related to that theme.</p>` },
-            { week: 10, day: 69, title: "Sade Sati", pages: "Page 150", startPage: 150, content: `<p>Learn about the famous and often feared Sade Sati. This is the 7.5-year period when Saturn transits the 12th, 1st, and 2nd houses from the natal Moon. It is a time of significant emotional and mental pressure, designed to foster maturity.</p>` },
-            { week: 10, day: 70, title: "Week 10 Review", pages: "Review", startPage: 140, content: `<p>Review Dasha results by house rulership and the principles of interpreting planetary transits, especially the powerful influence of Sade Sati.</p>` },
-            // Week 11
-            { week: 11, day: 71, title: "Jyotish and Ayurveda", pages: "Pages 153-155", startPage: 153, content: `<p>Jyotish and Ayurveda are sister sciences. Ayurveda, the traditional Indian healing system, classifies people according to their constitutional type or 'dosha' (Vata - air/ether, Pitta - fire, Kapha - earth/water).</p>` },
-            { week: 11, day: 72, title: "Determining Dosha from the Chart", pages: "Pages 155-157", startPage: 155, content: `<p>The Ascendant, its lord, and planets in the 1st house are key to determining the primary dosha from a birth chart. The elemental nature of the signs and planets involved provides the main clues.</p>` },
-            { week: 11, day: 73, title: "Medical Astrology Basics", pages: "Pages 157-161", startPage: 157, content: `<p>The birth chart can indicate overall health and potential vulnerabilities. To assess this, analyze the Ascendant and its lord (vitality), the 6th house (disease), the 8th house (longevity/chronic illness), and the 12th house (hospitalization).</p>` },
-            { week: 11, day: 74, title: "Remedial Measures: Gemstones", pages: "Pages 162-164", startPage: 162, content: `<p>When a planet is weak or afflicted, remedial measures can be used. Gemstones are used to strengthen the energy of a planet. It is crucial to only wear gemstones for planets that are functional benefics for your specific Ascendant.</p>` },
-            { week: 11, day: 75, title: "Remedial Measures: Mantras", pages: "Pages 167-168", startPage: 167, content: `<p>A safe and powerful alternative to gemstones is the regular chanting of planetary mantras. Mantras help to fortify and balance a planet's energy, bringing out its higher, more spiritual qualities.</p>` },
-            { week: 11, day: 76, title: "Practical Chart Work: Career", pages: "Pages 171-173", startPage: 171, content: `<p>Learn a key technique for determining one's vocation. Find the lord of the 10th house in the main Rashi chart and locate its position in the Navamsha (D9) chart. The planet that rules that Navamsha sign will give strong clues about the true career path.</p>` },
-            { week: 11, day: 77, title: "Week 11 Review", pages: "Review", startPage: 153, content: `<p>Review the connections between Jyotish and Ayurveda, the basics of remedial measures (gemstones and mantras), and the practical technique for career analysis using the Navamsha.</p>` },
-            // Week 12
-            { week: 12, day: 78, title: "Chart Judgment Guidelines", pages: "Pages 173-174", startPage: 173, content: `<p>When judging any house, four factors are important: (1) Any planets residing in the house; (2) Any planets aspecting the house; (3) The placement and condition of the lord of the house; (4) The Karaka (significator) for that house.</p>` },
-            { week: 12, day: 79, title: "Using the Moon as Ascendant", pages: "Pages 174-178", startPage: 174, content: `<p>It is a fundamental principle to analyze the chart from the Moon's position (Chandra Lagna) as a secondary Ascendant. This gives a crucial perspective on the emotional and mental experience of the person's karma.</p>` },
-            { week: 12, day: 80, title: "Cancellation of Debility (Neecha Bhanga)", pages: "Pages 178-180", startPage: 178, content: `<p>A planet in its sign of fall (neecha) is weak, but this weakness can be cancelled (bhanga) if certain conditions are met, such as its dispositor being exalted or in an angle. A planet with Neecha Bhanga can give excellent results after initial struggles.</p>` },
-            { week: 12, day: 81, title: "The Yoga Sutras of Patanjali", pages: "Pages 181-184", startPage: 181, content: `<p>This lesson explores the philosophical and spiritual context of Vedic Astrology through the lens of the Yoga Sutras. Astrology deals with the outcomes of past actions (karma), and the Yoga Sutras provide the means of transcending these karmic conditions.</p>` },
-            { week: 12, day: 82, title: "Karma and Free Will", pages: "Pages 184-187", startPage: 184, content: `<p>Deepen your understanding of how karma is reflected in the chart and the role of free will. The birth chart shows our karmic tendencies, but our future is determined by our consciousness and the choices we make now.</p>` },
-            { week: 12, day: 83, title: "The Eight Limbs of Yoga", pages: "Pages 185-187", startPage: 185, content: `<p>Learn about the eight limbs of yoga (Yama, Niyama, Asana, etc.) and how they relate to purifying consciousness and transcending planetary influences.</p>` },
-            { week: 12, day: 84, title: "Week 12 Review", pages: "Review", startPage: 173, content: `<p>Review advanced interpretation techniques like Chandra Lagna and Neecha Bhanga, and reflect on the spiritual philosophy from the Yoga Sutras that underpins Vedic Astrology.</p>` },
-            // Week 13
-            { week: 13, day: 85, title: "Review: Planets and Signs", pages: "Review", startPage: 40, content: `<p>Go back and review Chapters 4, 5, and 6. Ensure you have a solid grasp of the planets, their conditions (combustion, retrograde), and their strengths in different signs (dignity).</p>` },
-            { week: 13, day: 86, title: "Review: Houses and Aspects", pages: "Review", startPage: 66, content: `<p>Review Chapters 7 and 8. Make sure you are comfortable with the meanings of all twelve houses, house groupings (kendras, trikonas), and the rules of planetary aspects (drishti).</p>` },
-            { week: 13, day: 87, title: "Review: Yogas and Divisional Charts", pages: "Review", startPage: 104, content: `<p>Review Chapters 10 and 11. Practice identifying the most common yogas and recall the purpose of the main divisional charts (D9, D2, D3, etc.).</p>` },
-            { week: 13, day: 88, title: "Review: Predictive Techniques", pages: "Review", startPage: 126, content: `<p>Review Chapters 12 and 13. Solidify your understanding of the Vimshottari Dasha system and how to integrate it with transits for timing events.</p>` },
-            { week: 13, day: 89, title: "Putting It All Together", pages: "Review", startPage: 171, content: `<p>Take an example chart (perhaps your own or a friend's) and try to apply all the principles you've learned. Start with the Ascendant, analyze each planet, look for yogas, and check the current Dasha and transits. Focus on the process of synthesis.</p>` },
-            { week: 13, day: 90, title: "Course Completion and Next Steps", pages: "Review", startPage: 7, content: `<p>Congratulations! You've completed the foundation course. The journey of learning astrology is lifelong. Consider further study with Volume 2, seek out a qualified teacher, and most importantly, keep practicing by looking at charts.</p>` },
-        ];
-
-
-        const coursePlanEl = document.getElementById('course-plan');
-        const mainContentEl = document.getElementById('main-content');
-        const mainContentWrapperEl = document.getElementById('main-content-wrapper');
-        let progress = {};
-
-        function loadProgress() {
-            const savedProgress = localStorage.getItem('vedicAstrologyProgress');
-            if (savedProgress) {
-                progress = JSON.parse(savedProgress);
-            }
-        }
-
-        function saveProgress() {
-            localStorage.setItem('vedicAstrologyProgress', JSON.stringify(progress));
-        }
-
-        function renderCoursePlan() {
-            coursePlanEl.innerHTML = ''; // Clear existing plan
-            let currentWeek = 0;
-            let weekEl;
-
-            courseData.forEach(day => {
-                if (day.week !== currentWeek) {
-                    currentWeek = day.week;
-                    weekEl = document.createElement('div');
-                    weekEl.innerHTML = `<h3 class="p-4 text-lg font-semibold bg-gray-50 border-b border-t">Week ${currentWeek}</h3>`;
-                    coursePlanEl.appendChild(weekEl);
-                }
-
-                const dayEl = document.createElement('div');
-                dayEl.className = `flex items-center p-4 border-b cursor-pointer hover:bg-indigo-50 ${progress[day.day] ? 'bg-green-50' : ''}`;
-                dayEl.dataset.day = day.day;
-                dayEl.innerHTML = `
-                    <div class="flex-shrink-0">
-                        <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 day-checkbox" data-day="${day.day}" ${progress[day.day] ? 'checked' : ''}>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-900">Day ${day.day}: ${day.title}</p>
-                    </div>
-                `;
-                dayEl.addEventListener('click', (e) => {
-                    if (e.target.type !== 'checkbox') {
-                        renderDayContent(day.day);
-                    }
-                });
-                weekEl.appendChild(dayEl);
-            });
-
-            document.querySelectorAll('.day-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', (e) => {
-                    const day = e.target.dataset.day;
-                    progress[day] = e.target.checked;
-                    saveProgress();
-                    e.target.closest('.flex.items-center').classList.toggle('bg-green-50', e.target.checked);
-                });
-            });
-        }
-        
-        function renderWelcomeScreen() {
-            mainContentWrapperEl.innerHTML = `<div id="main-content" class="h-full flex items-center justify-center">
-                <div class="text-center">
-                    <h2 class="text-3xl font-bold mb-4">Welcome to Your 90-Day Course</h2>
-                    <p class="text-lg text-gray-600">Select a day from the course plan to begin your journey into Vedic Astrology.</p>
-                     <div class="mt-8">
-                        <svg class="w-32 h-32 mx-auto text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        function renderPdfView(pageNumber = 1) {
-            // FIX: The original filename was complex. Renaming it to a simple, web-safe name
-            // like "Vedic Astrology.pdf" is the most robust solution.
-            // This code now assumes the file is available under this new, simpler name.
-            const pdfFile = 'Vedic Astrology.pdf';
-            const pdfUrl = `${pdfFile}#page=${pageNumber}`;
+        document.addEventListener('DOMContentLoaded', () => {
             
-            mainContentWrapperEl.innerHTML = `
-                <div class="h-full flex flex-col bg-white rounded-lg shadow-md">
-                    <div class="p-4 border-b flex-shrink-0">
-                        <button id="back-to-course" class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                            </svg>
-                            Back to Course
-                        </button>
-                    </div>
-                    <iframe src="${pdfUrl}" class="w-full flex-grow border-0"></iframe>
-                </div>
-            `;
-            
-            mainContentWrapperEl.classList.remove('p-8');
+            const SUPABASE_URL = 'https://cthplmtrawzqtgdliebl.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0aHBsbXRyYXd6cXRnZGxpZWJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5NzI3NzUsImV4cCI6MjA2OTU0ODc3NX0.uzUHhbWulubUn6LZkeYQZcwLh7yVp1DXsrccP-6WPqA';
+            const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            document.getElementById('back-to-course').addEventListener('click', () => {
-                mainContentWrapperEl.classList.add('p-8');
-                const activeDayEl = document.querySelector('.bg-indigo-100');
-                if (activeDayEl) {
-                    renderDayContent(activeDayEl.dataset.day);
+            // --- UI ELEMENTS ---
+            const loginView = document.getElementById('login-view');
+            const resetPasswordView = document.getElementById('reset-password-view');
+            const chatbotView = document.getElementById('chatbot-view');
+            const loginForm = document.getElementById('login-form');
+            const resetPasswordForm = document.getElementById('reset-password-form');
+            const authMessage = document.getElementById('auth-message');
+            const resetMessage = document.getElementById('reset-message');
+            const forgotPasswordLink = document.getElementById('forgot-password-link');
+            const backToLoginLink = document.getElementById('back-to-login-link');
+            const logoutButton = document.getElementById('logout-button');
+            const chatWindow = document.getElementById('chat-window');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const newConversationButton = document.getElementById('new-conversation-button');
+
+            // --- STATE MANAGEMENT ---
+            let chatHistory = [];
+            let isChatInitialized = false; 
+            const INITIAL_COACH_MESSAGE = "Hello! I'm here to offer a confidential space for our conversation. To begin, what feels most important for you to focus on today?";
+
+            // --- AUTHENTICATION & VIEW MANAGEMENT ---
+            const showView = (viewToShow) => {
+                [loginView, resetPasswordView, chatbotView].forEach(view => view.classList.add('hidden'));
+                viewToShow.classList.remove('hidden');
+            };
+            
+            supabaseClient.auth.onAuthStateChange((_event, session) => {
+                if (session) {
+                    showChatbotView();
                 } else {
-                    renderWelcomeScreen();
+                    isChatInitialized = false; 
+                    showView(loginView);
                 }
             });
 
-             document.querySelectorAll('#course-plan > div > div').forEach(el => {
-                el.classList.remove('bg-indigo-100');
-            });
-        }
+            loginForm.addEventListener('submit', async (e) => { e.preventDefault(); authMessage.textContent = ''; const { error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value }); if (error) authMessage.textContent = error.message; else loginForm.reset(); });
+            logoutButton.addEventListener('click', async () => { await supabaseClient.auth.signOut(); });
+            forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); showView(resetPasswordView); });
+            backToLoginLink.addEventListener('click', (e) => { e.preventDefault(); showView(loginView); });
+            resetPasswordForm.addEventListener('submit', async (e) => { e.preventDefault(); resetMessage.textContent = ''; const email = document.getElementById('reset-email').value; const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href }); if (error) { resetMessage.textContent = error.message; } else { resetMessage.textContent = 'Success! Please check your email for a password reset link.'; } });
 
-        function renderDayContent(dayNumber) {
-            const dayData = courseData.find(d => d.day == dayNumber);
-            if (!dayData) return;
+            async function showChatbotView() {
+                if (isChatInitialized) return; 
+                isChatInitialized = true;
+                showView(chatbotView);
+                await loadChatHistory();
+            }
+
+            // --- CHATBOT LOGIC ---
+            const addMessage = (sender, message) => { const msg = document.createElement('div'); msg.className = `w-full flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`; msg.innerHTML = `<div class="max-w-md rounded-lg p-3 ${sender === 'user' ? 'bg-[#003F5C] text-white' : 'bg-white text-gray-800 shadow-sm'}"><p>${message.replace(/\n/g, '<br>')}</p></div>`; chatWindow.appendChild(msg); chatWindow.scrollTop = chatWindow.scrollHeight; };
+            const showChatSpinner = () => { if (!document.getElementById('spinner')) { const s = document.createElement('div'); s.id = 'spinner'; s.className = 'w-full flex justify-start'; s.innerHTML = '<div class="max-w-md rounded-lg p-3 bg-white text-gray-800 shadow-sm flex items-center"><div class="spinner"></div></div>'; chatWindow.appendChild(s); chatWindow.scrollTop = chatWindow.scrollHeight; }};
+            const hideChatSpinner = () => { const s = document.getElementById('spinner'); if (s) s.remove(); };
+
+            const resetChat = async () => {
+                chatHistory = [];
+                chatWindow.innerHTML = '';
+                addMessage('bot', INITIAL_COACH_MESSAGE);
+                try {
+                    await supabaseClient.functions.invoke('coaching-proxy', { body: { task: 'clear_history' } });
+                } catch (error) { console.error("Failed to clear history in DB:", error); }
+            };
+
+            const loadChatHistory = async () => {
+                chatWindow.innerHTML = '';
+                showChatSpinner();
+                try {
+                    const { data, error } = await supabaseClient.functions.invoke('coaching-proxy', { body: { task: 'get_history' } });
+                    if (error) throw error;
+                    chatHistory = data.history || [];
+                    if (chatHistory.length === 0) { addMessage('bot', INITIAL_COACH_MESSAGE); } 
+                    else { chatHistory.forEach(turn => addMessage(turn.role === 'user' ? 'user' : 'bot', turn.parts[0].text)); }
+                } catch (error) { console.error("Failed to load chat history:", error); addMessage('bot', 'Could not load previous conversation.'); } 
+                finally { hideChatSpinner(); }
+            };
+
+            const getBotResponse = async () => {
+                try {
+                    const { data, error } = await supabaseClient.functions.invoke('coaching-proxy', { 
+                        body: { chatHistory: chatHistory } 
+                    });
+                    if (error) throw error;
+                    hideChatSpinner();
+                    addMessage('bot', data.botResponse);
+                } catch (error) { console.error("Function call failed:", error); hideChatSpinner(); addMessage('bot', `Sorry, an error occurred: ${error.message}.`); }
+            };
+
+            const handleSend = async () => {
+                const userText = chatInput.value.trim();
+                if (!userText) return;
+                addMessage('user', userText);
+                chatInput.value = '';
+                chatHistory.push({ role: "user", parts: [{ text: userText }] });
+                
+                sendButton.disabled = true;
+                showChatSpinner();
+                await getBotResponse();
+                sendButton.disabled = false;
+                chatInput.focus();
+            };
             
-            const notes = localStorage.getItem(`vedicAstrologyNotes_day${dayNumber}`) || '';
-            
-            mainContentWrapperEl.classList.add('p-8');
-            mainContentWrapperEl.innerHTML = `<div id="main-content" class="h-full"></div>`;
-            const mainContentEl = document.getElementById('main-content');
-
-
-            mainContentEl.innerHTML = `
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-3xl font-bold mb-2">Day ${dayData.day}: ${dayData.title}</h2>
-                    <div class="prose max-w-none">${dayData.content}</div>
-                     <button id="read-pdf-link" class="mt-6 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">Read in PDF (${dayData.pages})</button>
-                    
-                    <h3 class="text-2xl font-semibold mt-8 mb-4">My Notes</h3>
-                    <textarea id="notes-area" class="w-full h-64 p-4 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Take your notes for Day ${dayData.day} here...">${notes}</textarea>
-                </div>
-            `;
-
-            document.getElementById('read-pdf-link').addEventListener('click', () => {
-                renderPdfView(dayData.startPage);
-            });
-
-            document.getElementById('notes-area').addEventListener('input', (e) => {
-                localStorage.setItem(`vedicAstrologyNotes_day${dayNumber}`, e.target.value);
-            });
-
-            // Highlight active day in sidebar
-            document.querySelectorAll('#course-plan > div > div').forEach(el => {
-                el.classList.remove('bg-indigo-100');
-            });
-            document.querySelector(`[data-day='${dayNumber}']`).classList.add('bg-indigo-100');
-        }
-
-        // Initial Load
-        loadProgress();
-        renderCoursePlan();
-        document.getElementById('view-pdf-btn').addEventListener('click', () => renderPdfView());
-
+            sendButton.addEventListener('click', handleSend);
+            chatInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') handleSend(); });
+            newConversationButton.addEventListener('click', resetChat);
+        });
     </script>
 </body>
 </html>
